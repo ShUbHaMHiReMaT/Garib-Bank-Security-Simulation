@@ -1,0 +1,426 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Enhanced Gobuster Simulation with Banking Interface</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Courier New', monospace;
+            background-color: #0d1117;
+            color: #00ff00;
+            padding: 20px;
+            line-height: 1.6;
+        }
+
+        .container {
+            display: flex;
+            gap: 20px;
+            max-width: 1400px;
+            margin: 0 auto;
+        }
+
+        .terminal-container {
+            flex: 1;
+        }
+
+        .bank-interface {
+            flex: 1;
+            background-color: #ffffff;
+            border-radius: 8px;
+            padding: 20px;
+            color: #333;
+            font-family: Arial, sans-serif;
+            display: none;
+        }
+
+        .terminal {
+            background-color: #161b22;
+            border: 1px solid #30363d;
+            border-radius: 8px;
+            padding: 20px;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.5);
+        }
+
+        /* Previous terminal styles remain the same */
+        .header {
+            background-color: #21262d;
+            padding: 10px;
+            border-radius: 4px;
+            margin-bottom: 20px;
+            border: 1px solid #30363d;
+        }
+
+        .input-line {
+            display: flex;
+            align-items: center;
+            margin-bottom: 15px;
+            background-color: #0d1117;
+            padding: 10px;
+            border-radius: 4px;
+        }
+
+        .prompt {
+            color: #00ff00;
+            margin-right: 10px;
+            font-weight: bold;
+        }
+
+        .command-input {
+            background-color: transparent;
+            border: none;
+            color: #00ff00;
+            font-family: 'Courier New', monospace;
+            font-size: 14px;
+            width: 100%;
+            outline: none;
+        }
+
+        .status-bar {
+            background-color: #21262d;
+            padding: 10px;
+            border-radius: 4px;
+            margin: 15px 0;
+            border: 1px solid #30363d;
+        }
+
+        .output-container {
+            background-color: #0d1117;
+            padding: 15px;
+            border-radius: 4px;
+            max-height: 400px;
+            overflow-y: auto;
+            border: 1px solid #30363d;
+        }
+
+        .output-line {
+            margin: 5px 0;
+            padding: 3px 0;
+            display: flex;
+            align-items: center;
+        }
+
+        .directory-link {
+            color: #58a6ff;
+            text-decoration: underline;
+            cursor: pointer;
+        }
+
+        /* Bank Interface Styles */
+        .bank-header {
+            background-color: #1a73e8;
+            color: white;
+            padding: 15px;
+            border-radius: 8px;
+            margin-bottom: 20px;
+        }
+
+        .bank-form {
+            display: flex;
+            flex-direction: column;
+            gap: 15px;
+        }
+
+        .form-group {
+            display: flex;
+            flex-direction: column;
+            gap: 5px;
+        }
+
+        .form-group label {
+            font-weight: bold;
+            color: #333;
+        }
+
+        .form-group input {
+            padding: 10px;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            font-size: 14px;
+        }
+
+        .transfer-btn {
+            background-color: #1a73e8;
+            color: white;
+            border: none;
+            padding: 12px;
+            border-radius: 4px;
+            cursor: pointer;
+            font-weight: bold;
+            margin-top: 10px;
+        }
+
+        .transfer-btn:hover {
+            background-color: #1557b0;
+        }
+
+        .alert {
+            padding: 10px;
+            border-radius: 4px;
+            margin-top: 10px;
+            display: none;
+        }
+
+        .alert-success {
+            background-color: #d4edda;
+            color: #155724;
+            border: 1px solid #c3e6cb;
+        }
+
+        .alert-error {
+            background-color: #f8d7da;
+            color: #721c24;
+            border: 1px solid #f5c6cb;
+        }
+
+        .progress-bar {
+            background-color: #21262d;
+            height: 20px;
+            border-radius: 10px;
+            margin: 10px 0;
+            overflow: hidden;
+            border: 1px solid #30363d;
+        }
+
+        .progress-fill {
+            background-color: #238636;
+            height: 100%;
+            width: 0%;
+            transition: width 0.3s ease;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <!-- Terminal Section -->
+        <div class="terminal-container">
+            <div class="terminal">
+                <div class="header">
+                    Directory Scanner Simulation v3.0
+                </div>
+                <div class="input-line">
+                    <span class="prompt">root@kali:~$</span>
+                    <input type="text" class="command-input" placeholder="Enter gobuster command..." 
+                           value="gobuster dir -u http://garibbank.thm -w wordlist.txt -t 50">
+                </div>
+                <div class="status-bar" id="statusBar">
+                    Ready to scan. Press Enter to start...
+                </div>
+                <div class="progress-bar">
+                    <div class="progress-fill" id="progressBar"></div>
+                </div>
+                <div class="output-container" id="output"></div>
+            </div>
+        </div>
+
+        <!-- Bank Interface Section -->
+        <div class="bank-interface" id="bankInterface">
+            <div class="bank-header">
+                <h2>Garib Bank Transfer Portal</h2>
+                <p>Secure Money Transfer System</p>
+            </div>
+            <div class="bank-form">
+                <div class="form-group">
+                    <label>From Account</label>
+                    <input type="text" id="fromAccount" placeholder="Enter your account number" value="1234567890">
+                </div>
+                <div class="form-group">
+                    <label>To Account</label>
+                    <input type="text" id="toAccount" placeholder="Enter recipient's account number">
+                </div>
+                <div class="form-group">
+                    <label>Amount ($)</label>
+                    <input type="number" id="amount" placeholder="Enter amount">
+                </div>
+                <div class="form-group">
+                    <label>Description</label>
+                    <input type="text" id="description" placeholder="Enter transfer description">
+                </div>
+                <button class="transfer-btn" onclick="initiateTransfer()">Transfer Money</button>
+                <div class="alert alert-success" id="successAlert">
+                    Transfer completed successfully!
+                </div>
+                <div class="alert alert-error" id="errorAlert">
+                    Transfer failed. Please check your details and try again.
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Previous terminal simulation code remains the same
+        const commandInput = document.querySelector('.command-input');
+        const output = document.getElementById('output');
+        const statusBar = document.getElementById('statusBar');
+        const progressBar = document.getElementById('progressBar');
+        const bankInterface = document.getElementById('bankInterface');
+
+        // Directory paths with clickable ones
+        const directories = [
+            '/portal',
+            '/admin',
+            '/adminportal',
+            '/login',
+            '/secure-login',
+            '/dashboard',
+            '/customer-dashboard',
+            '/account-summary',
+            '/transactions',
+            '/transfer-money',
+            '/international-transfer',
+            '/bill-pay',
+            // ... (previous directories remain the same)
+        ];
+
+        let isScanning = false;
+        let scanInterval;
+        let progress = 0;
+        let foundDirs = [];
+        let totalRequests = 0;
+        let startTime;
+
+        function getTimestamp() {
+            return new Date().toLocaleTimeString('en-US', { 
+                hour12: false, 
+                hour: '2-digit', 
+                minute: '2-digit', 
+                second: '2-digit' 
+            });
+        }
+
+        function addOutputLine(message, type = '', isClickable = false) {
+            const line = document.createElement('div');
+            line.className = `output-line ${type}`;
+            
+            if (isClickable && message.includes('/transfer-money')) {
+                const timestamp = `<span class="timestamp">[${getTimestamp()}]</span>`;
+                const parts = message.split('/transfer-money');
+                const clickableLink = `<span class="directory-link" onclick="showBankInterface()">/transfer-money</span>`;
+                line.innerHTML = `${timestamp} ${parts[0]}${clickableLink}${parts[1]}`;
+            } else {
+                line.innerHTML = `<span class="timestamp">[${getTimestamp()}]</span> ${message}`;
+            }
+            
+            output.appendChild(line);
+            output.scrollTop = output.scrollHeight;
+        }
+
+        function showBankInterface() {
+            bankInterface.style.display = 'block';
+        }
+
+        function initiateTransfer() {
+            const fromAccount = document.getElementById('fromAccount').value;
+            const toAccount = document.getElementById('toAccount').value;
+            const amount = document.getElementById('amount').value;
+            const successAlert = document.getElementById('successAlert');
+            const errorAlert = document.getElementById('errorAlert');
+
+            // Reset alerts
+            successAlert.style.display = 'none';
+            errorAlert.style.display = 'none';
+
+            // Basic validation
+            if (!fromAccount || !toAccount || !amount) {
+                errorAlert.style.display = 'block';
+                return;
+            }
+
+            // Simulate transfer processing
+            setTimeout(() => {
+                if (Math.random() > 0.5) {
+                    successAlert.style.display = 'block';
+                    // Reset form
+                    document.getElementById('toAccount').value = '';
+                    document.getElementById('amount').value = '';
+                    document.getElementById('description').value = '';
+                } else {
+                    errorAlert.style.display = 'block';
+                }
+            }, 1000);
+        }
+
+        function updateProgress(value) {
+            progress = value;
+            progressBar.style.width = `${progress}%`;
+            const elapsed = ((Date.now() - startTime) / 1000).toFixed(1);
+            statusBar.textContent = `Progress: ${Math.floor(progress)}% | Found: ${foundDirs.length} directories | Requests: ${totalRequests} | Time: ${elapsed}s`;
+        }
+
+        function startScan() {
+            if (!commandInput.value.includes('gobuster')) {
+                addOutputLine('Error: Invalid command. Please use gobuster...', 'error');
+                return;
+            }
+
+            isScanning = true;
+            progress = 0;
+            foundDirs = [];
+            totalRequests = 0;
+            output.innerHTML = '';
+            startTime = Date.now();
+            bankInterface.style.display = 'none';
+
+            addOutputLine('===============================');
+            addOutputLine('Gobuster v3.5');
+            addOutputLine('by OJ Reeves (@TheColonial) & Christian Mehlmauer (@firefart)');
+            addOutputLine('===============================');
+            addOutputLine('Starting scan...');
+            addOutputLine(`[+] Url:            http://fakebank.thm`);
+            addOutputLine(`[+] Method:         GET`);
+            addOutputLine(`[+] Threads:        50`);
+            addOutputLine(`[+] Wordlist:       wordlist.txt`);
+            addOutputLine(`[+] Status codes:   200,301,302,403`);
+            addOutputLine(`[+] User Agent:     gobuster/3.5`);
+            addOutputLine('===============================');
+
+            scanInterval = setInterval(() => {
+                totalRequests++;
+                progress += (Math.random() * 2);
+
+                if (Math.random() < 0.15 && directories.length > foundDirs.length) {
+                    const availableDirs = directories.filter(d => !foundDirs.includes(d));
+                    const newDir = availableDirs[Math.floor(Math.random() * availableDirs.length)];
+                    foundDirs.push(newDir);
+
+                    const status = Math.random() > 0.5 ? 200 : 301;
+                    const size = Math.floor(Math.random() * 9000) + 1000;
+                    
+                    // Make transfer-money directory clickable
+                    const isTransferDir = newDir === '/transfer-money';
+                    addOutputLine(`[+] ${newDir} (Status: ${status}) [Size: ${size}]`, 'found', isTransferDir);
+                }
+
+                updateProgress(progress);
+
+                if (progress >= 100) {
+                    clearInterval(scanInterval);
+                    isScanning = false;
+                    addOutputLine('===============================');
+                    addOutputLine('Scan completed!');
+                    const elapsed = ((Date.now() - startTime) / 1000).toFixed(1);
+                    addOutputLine(`Total dirs found: ${foundDirs.length}`);
+                    addOutputLine(`Total requests: ${totalRequests}`);
+                    addOutputLine(`Scan duration: ${elapsed} seconds`);
+                    statusBar.textContent = 'Scan complete! Press Enter to start a new scan.';
+                }
+            }, 100);
+        }
+
+        commandInput.addEventListener('keypress', (e) => {
+            if (e.key === 'Enter') {
+                if (!isScanning) {
+                    startScan();
+                } else {
+                    addOutputLine('Scan already in progress...', 'error');
+                }
+            }
+        });
+    </script>
+</body>
+</html>
